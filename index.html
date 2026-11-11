@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Convivial</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Games for looking at photographs together. Deal a game, print the cards, build a deck.">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:title" content="Convivial">
+<meta property="og:description" content="Games for looking at photographs together.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://fotologic.github.io/convivial/">
+<meta property="og:image" content="https://fotologic.github.io/convivial/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ultra&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: a table of cards. One card at a time when dealing, large enough to read from the back of a room. */
+:root {
+  --paper: #ECEEE8;
+  --card: #FBFBF7;
+  --ink: #1C2320;
+  --muted: #5A645E;
+  --line: #C8CDC5;
+  --accent: #2B45C2;
+  --accent-ink: #FFFFFF;
+  --chip: #DFE3DB;
+  --display: 'Ultra', 'Rockwell Extra Bold', Georgia, serif;
+  --body: 'Quicksand', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #131816; --card: #1C2220; --ink: #E8ECE5; --muted: #9AA59D;
+    --line: #313A35; --accent: #93A4FF; --accent-ink: #10142B; --chip: #252C29;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #131816; --card: #1C2220; --ink: #E8ECE5; --muted: #9AA59D;
+  --line: #313A35; --accent: #93A4FF; --accent-ink: #10142B; --chip: #252C29;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font-family: var(--body); font-weight: 500; font-size: 17px; line-height: 1.55;
+}
+a { color: var(--accent); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+.wrap {
+  max-width: 1180px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* Header */
+.top { border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 14px; flex-wrap: wrap; }
+.brand { display: flex; flex-direction: column; gap: 2px; }
+.pp { font-family: 'Quicksand', var(--body); font-weight: 400; font-size: 12px; letter-spacing: 0.08em; color: var(--muted); text-decoration: none; width: fit-content; }
+.pp b { font-weight: 700; }
+.pp:hover { color: var(--accent); }
+.mark { font-family: var(--display); font-size: 24px; color: var(--ink); text-decoration: none; letter-spacing: 0.01em; line-height: 1.1; }
+.nav { display: flex; gap: 6px; flex-wrap: wrap; }
+.nav a { text-decoration: none; color: var(--muted); font-weight: 600; font-size: 15px; padding: 6px 10px; border-radius: 999px; }
+.nav a:hover, .nav a[aria-current="page"] { color: var(--ink); background: var(--chip); }
+
+main { padding-block: 28px 64px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; text-wrap: balance; line-height: 1.08; }
+.label { font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+
+/* Home */
+.hero { display: grid; gap: 28px; grid-template-columns: 1fr; padding-block: 16px 8px; }
+.hero h1 { font-size: clamp(36px, 5.2vw, 64px); }
+.hero p.lede { font-size: clamp(18px, 2vw, 22px); max-width: 34ch; margin: 14px 0 0; color: var(--muted); }
+.dealer { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; display: grid; gap: 18px; align-content: start; min-width: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 8px 16px; min-width: 52px; font-weight: 700; cursor: pointer; font-variant-numeric: tabular-nums; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; border: 0; border-radius: 999px; padding: 15px 26px; font-weight: 700; font-size: 18px; cursor: pointer; text-decoration: none; }
+.btn-primary { background: var(--accent); color: var(--accent-ink); }
+.btn-quiet { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.btn-primary:hover { filter: brightness(1.08); }
+.btn-quiet:hover { background: var(--chip); }
+.count { color: var(--muted); font-size: 15px; margin: 0; }
+.tiles { display: grid; gap: 14px; grid-template-columns: 1fr; margin-top: 36px; }
+.tile { display: block; text-decoration: none; color: var(--ink); border-top: 2px solid var(--ink); padding-top: 14px; }
+.tile h2 { font-size: 24px; margin-bottom: 6px; }
+.tile p { margin: 0; color: var(--muted); }
+.tile:hover h2 { color: var(--accent); }
+.quote { margin: 56px 0 0; padding-top: 22px; border-top: 1px solid var(--line); max-width: 70ch; color: var(--muted); font-size: 15px; }
+.quote cite { display: block; margin-top: 8px; font-style: normal; font-weight: 700; }
+.credits { margin-top: 18px; font-size: 14px; color: var(--muted); }
+.credits a { color: var(--muted); }
+@media (min-width: 860px) {
+  .hero { grid-template-columns: 1.15fr 1fr; align-items: end; }
+  .tiles { grid-template-columns: repeat(3, 1fr); gap: 28px; }
+}
+
+/* A game card */
+.table { display: grid; place-items: start center; }
+.gamecard {
+  width: 100%; max-width: 1120px; background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: clamp(22px, 3.2vw, 56px);
+  font-size: clamp(17px, 0.9vw + 11px, 30px); line-height: 1.5;
+  box-shadow: 0 1px 0 var(--line), 0 18px 40px -28px rgba(0,0,0,0.35);
+}
+.gamecard.dealt { animation: deal 420ms cubic-bezier(.2,.8,.2,1); }
+@keyframes deal { from { transform: translateY(14px) rotate(-1.2deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .gamecard.dealt { animation: none; } }
+.cardgrid { display: grid; gap: 1.1em 2.4em; grid-template-columns: 1fr; }
+.cardgrid > * { min-width: 0; }
+.gamecard h1 { font-size: clamp(34px, 3.4vw + 14px, 92px); margin-bottom: 0.35em; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.1em; }
+.meta span { background: var(--chip); border-radius: 999px; padding: 4px 12px; font-size: max(13px, 0.62em); font-weight: 700; color: var(--ink); }
+.meta span.closing { background: var(--accent); color: var(--accent-ink); }
+/* Last Look is a different kind of card: it gets the accent colour as its ground. */
+.gamecard.closing { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.gamecard.closing .meta span { background: color-mix(in srgb, var(--accent-ink) 18%, transparent); color: var(--accent-ink); }
+.gamecard.closing .steps li::before { color: var(--accent-ink); }
+.gamecard.closing .tip { border-top-color: color-mix(in srgb, var(--accent-ink) 35%, transparent); }
+.intro { margin: 0 0 1em; font-size: 1.08em; font-weight: 600; }
+.need { margin: 0; }
+.need b, .tip b { font-weight: 700; }
+.steps { margin: 0; padding: 0; list-style: none; counter-reset: s; display: grid; gap: 0.55em; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 1.6em 1fr; gap: 0.5em; }
+.steps li::before { content: counter(s); font-family: var(--display); color: var(--accent); line-height: 1.35; }
+.tip { margin: 1.2em 0 0; padding-top: 0.9em; border-top: 1px solid var(--line); }
+.tip-wide { display: none; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; width: 100%; max-width: 1120px; margin-top: 18px; }
+.actions .left, .actions .right { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.textbtn { background: none; border: 0; color: var(--muted); font-weight: 700; cursor: pointer; padding: 8px 4px; text-decoration: underline; text-underline-offset: 3px; }
+@media (min-width: 1000px) {
+  /* On a wide screen or a board, everything is sized from the card's font size,
+     and a script shrinks that size until the whole game fits without scrolling. */
+  .cardgrid { grid-template-columns: 0.8fr 1.2fr; align-items: start; }
+  .gamecard { padding: 1.5em 1.9em; }
+  .gamecard h1 { font-size: 2.5em; }
+  .tip-wide { display: block; }
+  .tip-narrow { display: none; }
+}
+
+/* Room: one game per table, dealt in rounds, readable from the back of the room. */
+.roombar { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: center; margin-bottom: 18px; }
+.roombar .grp { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.stepper { display: inline-flex; align-items: center; gap: 8px; }
+.stepper button { width: 40px; height: 40px; border-radius: 999px; border: 1px solid var(--line); background: transparent; font-weight: 700; font-size: 20px; cursor: pointer; line-height: 1; }
+.stepper button:hover { background: var(--chip); }
+.stepper output { min-width: 2ch; text-align: center; font-weight: 700; font-size: 20px; font-variant-numeric: tabular-nums; }
+.roomhead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.roomhead h1 { font-size: clamp(26px, 2.6vw, 40px); }
+.roomgrid { display: grid; gap: 14px; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); font-size: clamp(16px, 1.1vw + 8px, 30px); }
+.rtile { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.9em 1em; display: flex; flex-direction: column; gap: 0.3em; min-width: 0; }
+.rtile.dealt { animation: deal 420ms cubic-bezier(.2,.8,.2,1) both; }
+@media (prefers-reduced-motion: reduce) { .rtile.dealt { animation: none; } }
+.rtile .trow { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.tsize { display: inline-flex; align-items: center; gap: 6px; font-size: 0.66em; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tsize button { width: max(1.9em, 32px); height: max(1.9em, 32px); border-radius: 999px; border: 1px solid var(--line); background: transparent; cursor: pointer; font-weight: 700; line-height: 1; padding: 0; }
+.tsize button:hover { background: var(--chip); }
+.rtile .tno { font-size: 0.68em; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; color: var(--muted); }
+.rtile .rt { font-family: var(--display); font-size: calc(1.9em * var(--rtm, 1)); line-height: 1.05; color: var(--ink); text-decoration: none; text-wrap: balance; overflow-wrap: normal; word-break: normal; hyphens: manual; }
+.rtile .rt:hover { color: var(--accent); }
+.rtile .rm { font-size: 0.7em; color: var(--muted); font-weight: 600; }
+.rtile .swap { align-self: flex-start; margin-top: auto; font-size: 0.68em; padding: 4px 0; }
+.rtile.final { grid-column: 1 / -1; background: var(--accent); border-color: var(--accent); color: var(--accent-ink); padding: 1.4em; }
+.rtile.final .tno, .rtile.final .rm, .rtile.final .rt { color: var(--accent-ink); }
+.rtile.final .rt { font-size: calc(3em * var(--rtm, 1)); }
+.rtile.empty { border-style: dashed; background: transparent; }
+.rtile.empty .rt { color: var(--line); }
+@media (max-width: 699px) { .roomgrid { grid-template-columns: 1fr !important; font-size: 17px; } }
+
+/* Lists */
+.pagehead { margin-bottom: 26px; display: grid; gap: 10px; }
+.pagehead h1 { font-size: clamp(34px, 5vw, 60px); }
+.pagehead p { margin: 0; color: var(--muted); max-width: 62ch; }
+.gamelist { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr; border-top: 1px solid var(--line); }
+.gamelist a { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; padding: 16px 4px; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink); }
+.gamelist a:hover .t { color: var(--accent); }
+.gamelist .t { font-family: var(--display); font-size: 22px; line-height: 1.2; }
+.gamelist .i { color: var(--muted); grid-column: 1 / -1; font-size: 15px; }
+.gamelist .m { color: var(--muted); font-size: 13px; font-weight: 700; white-space: nowrap; align-self: center; }
+.gamelist .dim { opacity: 0.45; }
+@media (min-width: 860px) { .gamelist { grid-template-columns: 1fr 1fr; column-gap: 40px; } }
+
+/* Deck page */
+.prose { max-width: 70ch; }
+.prose h2 { font-size: 28px; margin: 40px 0 12px; }
+.prose p, .prose li { margin: 0 0 12px; }
+.prose ul { padding-left: 1.2em; }
+.archives { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; border-top: 1px solid var(--line); }
+.archives li { padding: 16px 0; border-bottom: 1px solid var(--line); margin: 0; }
+.archives .name { font-weight: 700; font-size: 18px; }
+.archives .lic { display: block; font-size: 14px; color: var(--muted); margin-top: 4px; }
+.note { background: var(--chip); border-radius: var(--radius); padding: 16px 18px; }
+
+/* Print page on screen */
+.printbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 26px; }
+.sheets { display: grid; gap: 18px; grid-template-columns: 1fr; }
+@media (min-width: 860px) { .sheets { grid-template-columns: 1fr 1fr; } }
+.pcard { background: #FFFFFF; color: #1A1A1A; border: 1px solid var(--line); border-radius: 4px; aspect-ratio: 297 / 210; max-width: 100%; padding: 4.2% 5%; font-size: clamp(6px, 0.95vw, 9.5px); line-height: 1.42; overflow: hidden; display: flex; flex-direction: column; }
+.pcard h2 { font-size: 2.3em; margin-bottom: 0.45em; color: #1A1A1A; }
+.pcard p { margin: 0 0 0.75em; }
+.pcard ol { margin: 0 0 0.75em; padding-left: 1.6em; }
+.pcard li { margin-bottom: 0.18em; }
+.pcard .pmeta { font-size: 0.85em; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; color: #555; margin-bottom: 0.9em; }
+.pcard .pfoot { margin-top: auto; font-size: 0.8em; color: #777; display: flex; justify-content: space-between; letter-spacing: 0.06em; }
+.pcard.closing { border-left: 14px solid #2B45C2; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.pcard.closing h2, .pcard.closing .pmeta { color: #2B45C2; }
+@media print { .pcard.closing { border-left: 14mm solid #2B45C2; } }
+
+@media print {
+  @page { size: A4 landscape; margin: 0; }
+  html, body { background: #FFFFFF !important; color: #1A1A1A !important; }
+  .top, .printbar, .pagehead, .noprint { display: none !important; }
+  main, .wrap { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+  .sheets { display: block; }
+  .pcard { width: 297mm; height: 210mm; aspect-ratio: auto; border: 0; border-radius: 0; padding: 16mm 20mm; font-size: 12.5pt; page-break-after: always; break-after: page; }
+  .pcard:last-child { page-break-after: auto; break-after: auto; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <a class="pp" href="https://www.photopedagogy.com/" target="_blank" rel="noopener" aria-label="PhotoPedagogy website"><b>PHOTO</b>PEDAGOGY</a>
+      <a class="mark" href="#">Convivial</a>
+    </div>
+    <nav class="nav" aria-label="Main">
+      <a href="#room" data-nav="room">Deal for a room</a>
+      <a href="#games" data-nav="games">All games</a>
+      <a href="#print" data-nav="print">Print the cards</a>
+      <a href="#deck" data-nav="deck">Build a deck</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap" id="view" tabindex="-1"></main>
+
+<script src="games.js"></script>
+<script>
+(function () {
+  var ALL = window.CONVIVIAL_GAMES || [];
+  var GAMES = ALL.filter(function (g) { return !g.closing; });
+  var CLOSING = ALL.filter(function (g) { return g.closing; })[0];
+  var SIZES = [2, 3, 4, 5, 6, 7];
+  var view = document.getElementById('view');
+
+  var tableSize = null;
+  try { var saved = parseInt(localStorage.getItem('convivial-table'), 10); if (saved) tableSize = saved; } catch (e) {}
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function byId(id) { for (var i = 0; i < ALL.length; i++) if (ALL[i].id === id) return ALL[i]; return null; }
+
+  function fits(g, n) {
+    if (!n) return true;
+    var p = g.players;
+    if (p.pairs && n >= 2) return true;
+    return n >= p.min && (p.max === 0 || n <= p.max);
+  }
+  function eligible() { return GAMES.filter(function (g) { return fits(g, tableSize); }); }
+
+  function playersText(p) {
+    if (p.pairs && p.max === 2) return '2 players, or split into pairs';
+    if (p.pairs) return 'In pairs';
+    if (p.max === 0) return p.min + ' or more players';
+    if (p.min === p.max) return p.min + ' players';
+    if (p.min === 1) return '1 to ' + p.max + ' players';
+    return p.min + ' to ' + p.max + ' players';
+  }
+  var TALK = { none: 'No talking', little: 'A little talking', lots: 'Talking' };
+  function metaBits(g) { return [playersText(g.players), 'About ' + g.minutes + ' minutes', TALK[g.talk]]; }
+  function sizeLabel(n) { return n >= 7 ? '7+' : String(n); }
+
+  /* Shuffle bag: every eligible game is dealt once before any repeats. */
+  var bag = [], bagKey = '';
+  function deal(excludeId) {
+    var pool = eligible();
+    if (!pool.length) return null;
+    var key = pool.map(function (g) { return g.id; }).join(',');
+    if (key !== bagKey || !bag.length) {
+      bagKey = key;
+      bag = pool.map(function (g) { return g.id; });
+      for (var i = bag.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = bag[i]; bag[i] = bag[j]; bag[j] = t; }
+      if (excludeId && bag[0] === excludeId && bag.length > 1) { var s = bag[0]; bag[0] = bag[1]; bag[1] = s; }
+    }
+    return bag.shift();
+  }
+
+  function setSize(n) {
+    tableSize = (tableSize === n) ? null : n;
+    try { if (tableSize) localStorage.setItem('convivial-table', tableSize); else localStorage.removeItem('convivial-table'); } catch (e) {}
+    bag = []; bagKey = '';
+  }
+
+  function chipsHTML() {
+    return '<div class="chips" role="group" aria-label="Players at your table">' + SIZES.map(function (n) {
+      return '<button class="chip" type="button" data-size="' + n + '" aria-pressed="' + (tableSize === n) + '">' + sizeLabel(n) + '</button>';
+    }).join('') + '</div>';
+  }
+  function countText() {
+    var n = eligible().length;
+    if (!tableSize) return 'All ' + GAMES.length + ' games are in the draw. Choose a table size to leave out games that won’t fit.';
+    return n + ' of ' + GAMES.length + ' games suit a table of ' + sizeLabel(tableSize) + '.';
+  }
+
+  function go(hash) { if (location.hash === hash) render(); else location.hash = hash; }
+
+  /* Views */
+  function home() {
+    return '' +
+      '<section class="hero">' +
+        '<div><h1>Games for looking at photographs together</h1>' +
+        '<p class="lede">Deal a game for each table. All you need is a pile of photographs and some people to play with.</p></div>' +
+        '<div class="dealer">' +
+          '<span class="label" id="sizeLabel">How many at your table?</span>' + chipsHTML() +
+          '<p class="count" id="count">' + countText() + '</p>' +
+          '<div><button class="btn btn-primary" type="button" data-act="deal">Deal a game</button></div>' +
+          '<p class="count" style="margin:0">Running a session with several tables? <a href="#room">Deal for the whole room</a>, a different game for each table.</p>' +
+        '</div>' +
+      '</section>' +
+      '<div class="tiles">' +
+        '<a class="tile" href="#games"><h2>All the games</h2><p>Browse the set and pick one yourself.</p></a>' +
+        '<a class="tile" href="#print"><h2>Print the cards</h2><p>One game to a sheet of A4, ready to shuffle.</p></a>' +
+        '<a class="tile" href="#deck"><h2>Build a deck</h2><p>What kind of pictures to gather, and where to find them free to use.</p></a>' +
+      '</div>' +
+      (CLOSING ? '<p style="margin-top:32px"><a class="btn btn-quiet" href="#g-' + CLOSING.id + '">When you have finished: ' + esc(CLOSING.title) + '</a></p>' : '') +
+      '<blockquote class="quote">I choose the term “conviviality” to designate the opposite of industrial productivity. I intend it to mean autonomous and creative intercourse among persons, and the intercourse of persons with their environment.<cite>Ivan Illich, Tools for Conviviality (1973)</cite></blockquote>' +
+      '<p class="credits">Made by <a href="https://www.alejandractr.com/" target="_blank" rel="noopener">Alejandra Carles-Tolra</a> and <a href="https://fotologic.substack.com/" target="_blank" rel="noopener">Jon Nicholls</a> for <a href="https://www.photopedagogy.com/" target="_blank" rel="noopener">PhotoPedagogy</a>.</p>';
+  }
+
+  function cardHTML(g) {
+    var meta = metaBits(g).map(function (m) { return '<span>' + esc(m) + '</span>'; }).join('');
+    if (g.closing) meta = '<span>To finish</span>' + meta;
+    return '' +
+      '<article class="gamecard dealt' + (g.closing ? ' closing' : '') + '" aria-labelledby="gt">' +
+        '<div class="cardgrid">' +
+          '<div>' +
+            '<h1 id="gt">' + esc(g.title) + '</h1>' +
+            '<div class="meta">' + meta + '</div>' +
+            '<p class="intro">' + esc(g.intro) + '</p>' +
+            '<p class="need"><b>You need:</b> ' + esc(g.need) + '</p>' +
+            (g.tip ? '<p class="tip tip-wide"><b>Tip:</b> ' + esc(g.tip) + '</p>' : '') +
+          '</div>' +
+          '<div>' +
+            '<ol class="steps">' + g.steps.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol>' +
+            (g.tip ? '<p class="tip tip-narrow"><b>Tip:</b> ' + esc(g.tip) + '</p>' : '') +
+          '</div>' +
+        '</div>' +
+      '</article>';
+  }
+
+  function game(id) {
+    var g = byId(id);
+    if (!g) return home();
+    var left = g.closing
+      ? '<a class="btn btn-quiet" href="#games">Back to the games</a>'
+      : '<button class="btn btn-primary" type="button" data-act="deal" data-from="' + g.id + '">Deal another</button>' +
+        '<span class="count">' + (tableSize ? 'Dealing for a table of ' + sizeLabel(tableSize) + '. ' : '') + '<button class="textbtn" type="button" data-act="home">Change</button></span>';
+    return '<div class="table">' + cardHTML(g) +
+      '<div class="actions">' +
+        '<div class="left">' + left + '</div>' +
+        '<div class="right"><a class="textbtn" href="#games">All games</a>' +
+        '<button class="textbtn noprint" type="button" data-act="full">Full screen</button></div>' +
+      '</div></div>';
+  }
+
+  function list() {
+    function row(g) {
+      var dim = false;
+      return '<li><a href="#g-' + g.id + '"' + (dim ? ' class="dim" title="Doesn’t suit a table of ' + sizeLabel(tableSize) + '"' : '') + '>' +
+        '<span class="t">' + esc(g.title) + '</span>' +
+        '<span class="m">' + esc(playersText(g.players)) + '</span>' +
+        '<span class="i">' + esc(g.intro) + '</span></a></li>';
+    }
+    var sorted = GAMES.slice().sort(function (a, b) { return a.title.replace(/^The /, '').localeCompare(b.title.replace(/^The /, '')); });
+    return '<div class="pagehead"><h1>All the games</h1><p>' + GAMES.length + ' games, A to Z. The number of players is shown beside each one.</p></div>' +
+      '<ul class="gamelist">' + sorted.map(row).join('') + '</ul>' +
+      (CLOSING ? '<div class="pagehead" style="margin-top:44px"><span class="label">To finish</span></div><ul class="gamelist">' + row(CLOSING) + '</ul>' : '');
+  }
+
+  function printCard(g) {
+    return '<section class="pcard' + (g.closing ? ' closing' : '') + '">' +
+      '<h2>' + esc(g.title) + '</h2>' +
+      '<div class="pmeta">' + (g.closing ? 'To finish · ' : '') + metaBits(g).map(esc).join(' · ') + '</div>' +
+      '<p>' + esc(g.intro) + '</p>' +
+      '<p><b>You need:</b> ' + esc(g.need) + '</p>' +
+      '<p><b>How to play:</b></p>' +
+      '<ol>' + g.steps.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol>' +
+      (g.tip ? '<p><b>Tip:</b> ' + esc(g.tip) + '</p>' : '') +
+      '<div class="pfoot"><span>Convivial</span><span><b>PHOTO</b>PEDAGOGY \u00b7 photopedagogy.com</span></div>' +
+    '</section>';
+  }
+  function printView() {
+    var cards = GAMES.slice().sort(function (a, b) { return a.title.replace(/^The /, '').localeCompare(b.title.replace(/^The /, '')); });
+    if (CLOSING) cards.push(CLOSING);
+    return '<div class="pagehead"><h1>Print the cards</h1><p>Every game on its own sheet of A4, landscape, in the same words as this site. ' + esc(CLOSING ? CLOSING.title : '') + ' comes last, so you can print it on different coloured paper and keep it out of the shuffle.</p></div>' +
+      '<div class="printbar"><button class="btn btn-primary" type="button" data-act="print">Print all ' + cards.length + ' cards</button>' +
+      '<span class="count">If the button does nothing, use your browser’s Print command (Ctrl+P or ⌘P) on this page.</span></div>' +
+      '<div class="sheets">' + cards.map(printCard).join('') + '</div>';
+  }
+
+  function deck() {
+    var A = [
+      ['Your students’ own work', null, 'Ask each student for one or two pictures, with permission. Contemporary, every genre, and plenty of experiment. For a room of teachers it makes its own argument.', 'Ask first.'],
+      ['Unsplash', 'https://unsplash.com', 'Contemporary photography of every kind, quick to browse. It has a polished house style, so follow particular photographers and search by process (35mm, double exposure, long exposure) to find stranger work.', 'Free to use and print without permission or credit. You may not sell unaltered copies. Pictures marked Unsplash+ are paid.'],
+      ['Flickr, filtered by licence', 'https://www.flickr.com/search/', 'More idiosyncratic: serious amateurs with real practices, and abstract work that is less decorative. Slower to browse, uneven in quality.', 'Set the licence filter to public domain, no known copyright restrictions, or CC BY. CC BY needs a credit.'],
+      ['Flickr Commons', 'https://www.flickr.com/commons', 'Historical pictures from libraries and museums around the world. Good for wild cards.', 'No known copyright restrictions. Check each item.'],
+      ['Library of Congress', 'https://www.loc.gov/free-to-use/', 'American life from the 1840s onwards, including early colour.', 'Mostly no known restrictions. Check each item.'],
+      ['The Met, Open Access', 'https://www.metmuseum.org/art/collection/search', 'The history of photography, from early experiments to the twentieth century.', 'CC0 where marked Open Access.'],
+      ['Nationaal Archief', 'https://www.nationaalarchief.nl/onderzoeken/fotocollectie', 'Everyday Dutch life, 1945 to 1990. Beaches, markets, classrooms, bicycles in the rain.', 'Much of it CC0. Check each item.'],
+      ['NASA Image and Video Library', 'https://images.nasa.gov', 'The Earth from above, other planets, the inside of spacecraft. Abstract by accident.', 'Generally not copyrighted. NASA asks that you don’t imply endorsement.'],
+      ['Smithsonian Open Access', 'https://www.si.edu/openaccess', 'Science, natural history, objects and people.', 'CC0 where marked.'],
+      ['Wikimedia Commons', 'https://commons.wikimedia.org', 'Huge and mixed. Best when you already know what you are looking for.', 'Licences vary. Read the file page.']
+    ];
+    return '<div class="pagehead"><h1>Build a deck</h1><p>The games need a pile of photographs you can hold and pass around. About 100 to 150 is a good size for a room of several tables.</p></div>' +
+      '<div class="prose">' +
+        '<h2>What the deck needs</h2>' +
+        '<ul>' +
+          '<li><b>Range.</b> Mix genres: portraits, landscapes, interiors, street, still life, documentary, abstract, scientific. In Tune and The Grid only work if the pictures differ in many ways at once.</li>' +
+          '<li><b>Colour and black and white.</b> If most pictures are black and white, that becomes the only rule anyone finds. Aim for roughly a third or more in colour, or the other way round.</li>' +
+          '<li><b>Plenty to point at.</b> For You and Keyhole need small details: hands, signs, things in corners.</li>' +
+          '<li><b>Places.</b> Make a World and Out of Shot need doorways, roads, rooms, views and pictures taken from above.</li>' +
+          '<li><b>A few old pictures as wild cards.</b> Historical photographs mixed into a contemporary deck give players another kind of difference to play with.</li>' +
+          '<li><b>Care with hardship.</b> A picture of suffering can work in Silent Domino and feel wrong as a gift in For You or an answer in The Oracle. Think about which pictures go into which games.</li>' +
+        '</ul>' +
+        '<h2>Where to find pictures</h2>' +
+        '<ul class="archives">' + A.map(function (a) {
+          return '<li><span class="name">' + (a[1] ? '<a href="' + a[1] + '" target="_blank" rel="noopener">' + esc(a[0]) + '</a>' : esc(a[0])) + '</span><br>' + esc(a[2]) + '<span class="lic">' + esc(a[3]) + '</span></li>';
+        }).join('') + '</ul>' +
+        '<p class="note" style="margin-top:20px">Licences change, and archives sometimes restrict single items inside open collections. Check the licence on each picture’s own page before you print it.</p>' +
+        '<h2>Printing</h2>' +
+        '<p>The easiest option is ordinary 6 \u00d7 4 inch photo prints from an online service such as FreePrints or Photobox. They are cheap, they feel like photographs, and they shuffle well. Allow a week or so for delivery.</p>' +
+        '<p>To print in school instead, use A6 (148 \u00d7 105 mm) on 300 to 350 gsm matt card, four to a sheet of A4. Either way, keep the fronts free of words.</p>' +
+      '</div>';
+  }
+
+  function render() {
+    var h = location.hash.replace(/^#/, '');
+    var html, nav = '';
+    if (h.indexOf('g-') === 0) { html = game(h.slice(2)); }
+    else if (h === 'games') { html = list(); nav = 'games'; }
+    else if (h === 'print') { html = printView(); nav = 'print'; }
+    else if (h === 'deck') { html = deck(); nav = 'deck'; }
+    else if (h === 'room') { html = roomView(); nav = 'room'; }
+    else { html = home(); }
+    view.innerHTML = html;
+    var links = document.querySelectorAll('[data-nav]');
+    for (var i = 0; i < links.length; i++) {
+      if (links[i].getAttribute('data-nav') === nav) links[i].setAttribute('aria-current', 'page'); else links[i].removeAttribute('aria-current');
+    }
+    var t = h.indexOf('g-') === 0 && byId(h.slice(2)) ? byId(h.slice(2)).title + ' · Convivial' : 'Convivial';
+    document.title = t;
+    window.scrollTo(0, 0);
+    fitCard();
+    fitRoom();
+  }
+
+  /* Room: each table has its own size and is dealt on its own, whenever it is ready. */
+  var room = { tables: [], used: {}, finished: false };
+  (function () {
+    var sizes = null;
+    try { sizes = JSON.parse(localStorage.getItem('convivial-room') || 'null'); } catch (e) {}
+    if (!Array.isArray(sizes) || !sizes.length) sizes = [4, 4, 4, 4, 4];
+    room.tables = sizes.slice(0, 12).map(function (n) { return { size: Math.max(2, Math.min(12, n | 0 || 4)), id: null, at: 0, hist: [] }; });
+  })();
+  function saveRoom() { try { localStorage.setItem('convivial-room', JSON.stringify(room.tables.map(function (t) { return t.size; }))); } catch (e) {} }
+  function shuffled(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function pickFor(i) {
+    var t = room.tables[i];
+    var ids = GAMES.filter(function (g) { return fits(g, t.size); }).map(function (g) { return g.id; });
+    var showing = room.tables.map(function (x, k) { return k === i ? null : x.id; });
+    var fresh = shuffled(ids.filter(function (id) { return !room.used[id]; }));
+    var seen = shuffled(ids.filter(function (id) { return room.used[id]; }));
+    var c = fresh.concat(seen);
+    var tests = [
+      function (id) { return showing.indexOf(id) < 0 && t.hist.indexOf(id) < 0 && id !== t.id; },
+      function (id) { return showing.indexOf(id) < 0 && id !== t.id; },
+      function (id) { return id !== t.id; }
+    ];
+    for (var a = 0; a < tests.length; a++) for (var k = 0; k < c.length; k++) if (tests[a](c[k])) return c[k];
+    return null;
+  }
+  function dealTable(i) {
+    var id = pickFor(i), t = room.tables[i];
+    t.id = id; t.at = Date.now();
+    if (id) { room.used[id] = true; t.hist.push(id); }
+    room.finished = false;
+  }
+  function colsFor(n) { return [1, 1, 2, 3, 2, 3, 3, 4, 4, 3, 4, 4, 4][n] || 4; }
+  function since(at) {
+    if (!at) return '';
+    var m = Math.floor((Date.now() - at) / 60000);
+    return m < 1 ? 'Just dealt' : 'Dealt ' + m + ' min ago';
+  }
+
+  function roomView() {
+    var any = room.tables.some(function (t) { return t.id; });
+    var bar = '<div class="roombar noprint">' +
+      '<div class="grp"><span class="label">Tables</span><span class="stepper"><button type="button" data-act="tables-minus" aria-label="Remove the last table">−</button><output aria-live="polite">' + room.tables.length + '</output><button type="button" data-act="tables-plus" aria-label="Add a table">+</button></span></div>' +
+      '<div class="grp"><button class="btn ' + (any ? 'btn-quiet' : 'btn-primary') + '" type="button" data-act="room-deal">' + (any ? 'Deal every table again' : 'Deal every table') + '</button>' +
+      (any && CLOSING ? '<button class="textbtn" type="button" data-act="room-finish">Finish with ' + esc(CLOSING.title) + '</button>' : '') +
+      '<button class="textbtn" type="button" data-act="full">Full screen</button></div>' +
+    '</div>';
+    var tiles = '';
+    if (room.finished && CLOSING) {
+      tiles = '<div class="rtile final dealt"><span class="tno">Every table</span><a class="rt" href="#g-' + CLOSING.id + '">' + esc(CLOSING.title) + '</a><span class="rm">' + esc(CLOSING.intro) + '</span>' +
+        '<button class="textbtn swap noprint" type="button" data-act="room-unfinish">Back to the tables</button></div>';
+    } else {
+      room.tables.forEach(function (t, i) {
+        var g = t.id ? byId(t.id) : null;
+        var sizeCtl = '<span class="tsize noprint"><button type="button" data-act="size-minus" data-i="' + i + '" aria-label="Fewer people at table ' + (i + 1) + '">−</button>' +
+          '<span>' + t.size + ' people</span><button type="button" data-act="size-plus" data-i="' + i + '" aria-label="More people at table ' + (i + 1) + '">+</button></span>';
+        tiles += '<div class="rtile' + (g ? ' dealt' : ' empty') + '">' +
+          '<div class="trow"><span class="tno">Table ' + (i + 1) + '</span>' + sizeCtl + '</div>' +
+          (g ? '<a class="rt" href="#g-' + g.id + '">' + esc(g.title) + '</a><span class="rm">About ' + g.minutes + ' min · <span data-at="' + t.at + '">' + since(t.at) + '</span></span>'
+             : '<span class="rt">' + (t.id === null && t.at ? 'No game fits' : '?') + '</span><span class="rm">&nbsp;</span>') +
+          '<button class="textbtn swap noprint" type="button" data-act="table-deal" data-i="' + i + '">' + (g ? 'New game' : 'Deal') + '</button></div>';
+      });
+    }
+    var head = '<div class="roomhead"><h1>' + (room.finished ? 'To finish' : 'The room') + '</h1>' +
+      '<span class="count">' + (any && !room.finished ? 'Each table plays from its printed card. When a table finishes, give it a new game.' : 'Set the number of people at each table, then deal.') + '</span></div>';
+    return bar + head + '<div class="roomgrid" style="--cols:' + colsFor(room.finished ? 1 : room.tables.length) + '">' + tiles + '</div>';
+  }
+  setInterval(function () {
+    var els = view.querySelectorAll('[data-at]');
+    for (var i = 0; i < els.length; i++) els[i].textContent = since(parseInt(els[i].getAttribute('data-at'), 10));
+  }, 30000);
+
+  /* Shrink every title by the same amount until the longest word in any title fits its tile,
+     so words are never broken in the middle. */
+  function fitTitles(grid) {
+    var titles = grid.querySelectorAll('.rt');
+    function fits() { for (var i = 0; i < titles.length; i++) if (titles[i].scrollWidth > titles[i].clientWidth + 1) return false; return true; }
+    grid.style.setProperty('--rtm', '1');
+    if (fits()) return;
+    var lo = 0.3, hi = 1;
+    for (var i = 0; i < 10; i++) {
+      var mid = (lo + hi) / 2;
+      grid.style.setProperty('--rtm', String(mid));
+      if (fits()) lo = mid; else hi = mid;
+    }
+    grid.style.setProperty('--rtm', String(lo));
+  }
+  function fitRoom() {
+    var grid = view.querySelector('.roomgrid');
+    if (!grid) return;
+    grid.style.fontSize = '';
+    fitTitles(grid);
+    if (window.innerWidth < 700) return;
+    var max = parseFloat(getComputedStyle(grid).fontSize);
+    var top = grid.getBoundingClientRect().top + window.scrollY;
+    var avail = window.innerHeight - top - 16;
+    if (grid.offsetHeight <= avail) return;
+    var lo = 11, hi = max;
+    for (var i = 0; i < 12; i++) {
+      var mid = (lo + hi) / 2;
+      grid.style.fontSize = mid + 'px';
+      if (grid.offsetHeight <= avail) lo = mid; else hi = mid;
+    }
+    grid.style.fontSize = lo + 'px';
+    fitTitles(grid);
+  }
+
+  /* Board view: shrink the card's type until the whole game fits on screen. */
+  var MIN_FONT = 15;
+  function fitCard() {
+    var card = view.querySelector('.gamecard');
+    if (!card) return;
+    card.style.fontSize = '';
+    if (window.innerWidth < 1000) return;
+    var actions = view.querySelector('.actions');
+    var max = parseFloat(getComputedStyle(card).fontSize);
+    var top = card.getBoundingClientRect().top + window.scrollY;
+    var avail = window.innerHeight - top - (actions ? actions.offsetHeight + 18 : 0) - 16;
+    if (card.offsetHeight <= avail) return;
+    var lo = MIN_FONT, hi = max;
+    for (var i = 0; i < 12; i++) {
+      var mid = (lo + hi) / 2;
+      card.style.fontSize = mid + 'px';
+      if (card.offsetHeight <= avail) lo = mid; else hi = mid;
+    }
+    card.style.fontSize = lo + 'px';
+  }
+  var fitQueued = false;
+  window.addEventListener('resize', function () {
+    if (fitQueued) return; fitQueued = true;
+    requestAnimationFrame(function () { fitQueued = false; fitCard(); fitRoom(); });
+  });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { fitCard(); fitRoom(); });
+
+  view.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-size],[data-act]');
+    if (!b) return;
+    if (b.hasAttribute('data-size')) {
+      setSize(parseInt(b.getAttribute('data-size'), 10));
+      var chips = view.querySelectorAll('[data-size]');
+      for (var i = 0; i < chips.length; i++) chips[i].setAttribute('aria-pressed', String(parseInt(chips[i].getAttribute('data-size'), 10) === tableSize));
+      var c = document.getElementById('count'); if (c) c.textContent = countText();
+      return;
+    }
+    var act = b.getAttribute('data-act');
+    if (act === 'deal') { var id = deal(b.getAttribute('data-from')); if (id) go('#g-' + id); }
+    else if (act === 'tables-minus') { if (room.tables.length > 1) room.tables.pop(); saveRoom(); render(); }
+    else if (act === 'tables-plus') {
+      if (room.tables.length < 12) {
+        var last = room.tables[room.tables.length - 1];
+        room.tables.push({ size: last ? last.size : 4, id: null, at: 0, hist: [] });
+        if (room.tables.some(function (t) { return t.id; })) dealTable(room.tables.length - 1);
+      }
+      saveRoom(); render();
+    }
+    else if (act === 'size-minus' || act === 'size-plus') {
+      var ti = parseInt(b.getAttribute('data-i'), 10), tt = room.tables[ti];
+      tt.size = Math.max(2, Math.min(12, tt.size + (act === 'size-plus' ? 1 : -1)));
+      var cg = tt.id ? byId(tt.id) : null;
+      if (cg && !fits(cg, tt.size)) dealTable(ti);
+      saveRoom(); render();
+    }
+    else if (act === 'room-deal') { for (var r = 0; r < room.tables.length; r++) room.tables[r].id = null; for (r = 0; r < room.tables.length; r++) dealTable(r); render(); }
+    else if (act === 'table-deal') { dealTable(parseInt(b.getAttribute('data-i'), 10)); render(); }
+    else if (act === 'room-finish') { room.finished = true; render(); }
+    else if (act === 'room-unfinish') { room.finished = false; render(); }
+    else if (act === 'home') go('#');
+    else if (act === 'print') { try { window.print(); } catch (err) {} }
+    else if (act === 'full') {
+      try {
+        if (document.fullscreenElement) document.exitFullscreen();
+        else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function () {});
+      } catch (err) {}
+    }
+  });
+
+  window.addEventListener('hashchange', render);
+  render();
+})();
+</script>
+</body>
+</html>
